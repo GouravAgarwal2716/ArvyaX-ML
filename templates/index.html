@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ArvyaX Guidance AI</title>
+    <!-- Tailwind CSS for styling the UI directly without separate CSS files -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .glass { background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.2); }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 min-h-screen text-white flex flex-col items-center py-12 px-4">
+
+    <div class="max-w-4xl w-full">
+        <!-- Header -->
+        <div class="text-center mb-10">
+            <h1 class="text-4xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-emerald-400 to-cyan-400 mb-2">
+                ArvyaX Emotional Guidance
+            </h1>
+            <p class="text-slate-400">Understand &rarr; Decide &rarr; Guide</p>
+        </div>
+
+        {% if error %}
+        <div class="bg-red-500/20 border border-red-500 text-red-300 px-4 py-3 rounded-lg mb-6">
+            {{ error }}
+        </div>
+        {% endif %}
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 shadow-2xl rounded-2xl p-1">
+            
+            <!-- Input Form -->
+            <div class="glass rounded-xl p-8">
+                <h2 class="text-xl font-semibold mb-6 flex items-center text-slate-200">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                    New Reflection
+                </h2>
+                
+                <form action="/predict" method="post" class="space-y-5">
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-slate-400 mb-2">How was your session?</label>
+                        <textarea name="journal_text" rows="4" 
+                            class="w-full bg-slate-800/50 border border-slate-700 rounded-lg p-3 text-white placeholder-slate-500 focus:ring-2 focus:ring-cyan-500 focus:border-transparent outline-none transition-all"
+                            placeholder="I feel like my thoughts are racing but I'm trying to relax..." required>{{ input_text | default('') }}</textarea>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-400 mb-2">Stress Level (1-5)</label>
+                            <input type="number" name="stress_level" min="1" max="5" value="3" class="w-full bg-slate-800/50 border border-slate-700 rounded-lg p-3 text-white focus:ring-2 focus:ring-cyan-500 outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-400 mb-2">Energy Level (1-5)</label>
+                            <input type="number" name="energy_level" min="1" max="5" value="3" class="w-full bg-slate-800/50 border border-slate-700 rounded-lg p-3 text-white focus:ring-2 focus:ring-cyan-500 outline-none">
+                        </div>
+                    </div>
+
+                    <div>
+                        <button type="submit" class="w-full bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 text-white font-bold py-3 px-4 rounded-lg shadow-lg hover:shadow-cyan-500/30 transition-all transform hover:-translate-y-0.5">
+                            Analyze & Guide
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Output / Prediction Panel -->
+            <div class="glass rounded-xl p-8 flex flex-col justify-center">
+                {% if prediction %}
+                    <h2 class="text-xl font-semibold mb-6 text-slate-200">AI Understanding</h2>
+                    
+                    <!-- State & Intensity -->
+                    <div class="grid grid-cols-2 gap-4 mb-6">
+                        <div class="bg-slate-800/50 rounded-lg p-4 border border-slate-700">
+                            <p class="text-sm text-slate-400 mb-1">State</p>
+                            <p class="text-xl font-bold text-white capitalize">{{ prediction.state }}</p>
+                        </div>
+                        <div class="bg-slate-800/50 rounded-lg p-4 border border-slate-700 relative">
+                            <p class="text-sm text-slate-400 mb-1">Intensity</p>
+                            <div class="flex items-center space-x-1">
+                                {% for i in range(5) %}
+                                    <div class="w-4 h-6 rounded-sm {{ 'bg-cyan-500' if i < prediction.intensity else 'bg-slate-700' }}"></div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Guidance Decision -->
+                    <div class="bg-gradient-to-r from-indigo-900/50 to-purple-900/50 rounded-lg p-5 border border-indigo-500/30 mb-6 relative overflow-hidden">
+                        <div class="absolute top-0 right-0 w-32 h-32 bg-indigo-500/10 rounded-full blur-2xl transform translate-x-10 -translate-y-10"></div>
+                        <h3 class="text-md font-medium text-indigo-300 mb-3">Recommended Action</h3>
+                        <p class="text-2xl font-bold text-white mb-1">{{ prediction.what_to_do }}</p>
+                        <p class="text-indigo-200 text-sm italic">{{ prediction.when_to_do }}</p>
+                    </div>
+
+                    <!-- Uncertainty Flag -->
+                    {% if prediction.is_uncertain %}
+                        <div class="bg-amber-500/10 border border-amber-500/50 rounded-lg p-4 mb-6 flex items-start">
+                            <svg class="w-6 h-6 text-amber-500 mr-3 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                            <div>
+                                <p class="text-sm font-medium text-amber-200">Uncertainty Flag Raised</p>
+                                <p class="text-xs text-amber-400/80 mt-1">The AI is only {{ prediction.confidence }} confident. Consider asking the user a clarifying question before guiding them.</p>
+                            </div>
+                        </div>
+                    {% endif %}
+
+                    <!-- Generative Message -->
+                    <div class="mt-auto">
+                        <p class="text-sm text-slate-400 mb-2">Supportive Message</p>
+                        <p class="text-lg text-slate-300 font-medium tracking-wide">"{{ prediction.support_message }}"</p>
+                    </div>
+
+                {% else %}
+                    <div class="text-center text-slate-500 flex flex-col items-center justify-center h-full">
+                        <svg class="w-16 h-16 mb-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path></svg>
+                        <p>Submit a reflection to see the AI's understanding and guidance.</p>
+                    </div>
+                {% endif %}
+            </div>
+
+        </div>
+    </div>
+</body>
+</html>
