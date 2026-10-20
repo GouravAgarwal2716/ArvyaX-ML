@@ -1,4 +1,4 @@
-# ArvyaX ML Assignment — Emotion & Guidance Engine
+# ArvyaX ML — Emotion & Guidance Engine
 
 ## Project Context
 At ArvyaX, AI should understand human emotional states, reason under flawed signals, and decide meaningful next actions to guide users to better states. This codebase builds a completely optimized, offline-capable ML engine to interpret short, messy journal reflections and physiological signals (metadata).
